@@ -1,7 +1,7 @@
 {
-  "name": "serverless-todo-app",
+  "name": "serverless-task-manager",
   "version": "1.0.0",
-  "description": "Serverless TODO image app",
+  "description": "Serverless Task Manager app",
   "dependencies": {
     "@types/axios": "^0.14.0",
     "@types/http-errors": "^1.6.1",
@@ -11,7 +11,7 @@
     "jsonwebtoken": "^8.5.1",
     "middy": "^0.27.0",
     "source-map-support": "^0.5.11",
-    "uuid": "^3.3.2",
+    "uuid": "^3.4.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {
@@ -30,6 +30,6 @@
     "typescript": ">=3.8.0",
     "webpack": "^4.29.6"
   },
-  "author": "Ivan Mushketyk",
+  "author": "Chukwuka",
   "license": "MIT"
 }

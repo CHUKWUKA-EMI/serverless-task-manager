@@ -1,20 +1,21 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
+
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
-import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
+
+import { getAllTasks as getAllTasksForCurrentUser } from '../../helpers/tasks'
 import { getUserId } from '../utils'
-import { createTodo } from '../../helpers/todos'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const newTodo: CreateTodoRequest = JSON.parse(event.body)
+    // Write your code here
     const userId = getUserId(event)
-    const todo = await createTodo(newTodo, userId)
+    const tasks = await getAllTasksForCurrentUser(userId)
     return {
-      statusCode: 201,
+      statusCode: 200,
       body: JSON.stringify({
-        item: todo
+        items: tasks
       })
     }
   }

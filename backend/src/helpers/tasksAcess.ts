@@ -2,25 +2,25 @@ import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
-import { TodoItem } from '../models/TodoItem'
-import { TodoUpdate } from '../models/TodoUpdate'
+import { TaskItem } from '../models/TaskItem'
+import { TaskUpdate } from '../models/TaskUpdate'
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
-const logger = createLogger('TodosAccess')
+const logger = createLogger('TasksAccess')
 
-export class Todo {
+export class Task {
   constructor(
     private readonly docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
-    private readonly todosTable = process.env.TODOS_TABLE
+    private readonly tasksTable = process.env.TASKS_TABLE
   ) {}
 
-  async findAll(userId: string): Promise<TodoItem[]> {
-    logger.info('Getting all todos', { userId })
+  async findAll(userId: string): Promise<TaskItem[]> {
+    logger.info('Getting all tasks', { userId })
 
     const result = await this.docClient
       .query({
-        TableName: this.todosTable,
+        TableName: this.tasksTable,
         IndexName: 'CreatedAtIndex',
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
@@ -31,40 +31,40 @@ export class Todo {
       .promise()
 
     const items = result.Items
-    return items as TodoItem[]
+    return items as TaskItem[]
   }
 
-  async create(todo: TodoItem): Promise<TodoItem> {
+  async create(task: TaskItem): Promise<TaskItem> {
     await this.docClient
       .put({
-        TableName: this.todosTable,
-        Item: todo
+        TableName: this.tasksTable,
+        Item: task
       })
       .promise()
 
-    return todo
+    return task
   }
 
   async update(
-    todoId: string,
+    taskId: string,
     userId: string,
-    updatedTodo: TodoUpdate
-  ): Promise<TodoUpdate> {
-    logger.info('todoItem', todoId)
+    updatedTask: TaskUpdate
+  ): Promise<TaskUpdate> {
+    logger.info('taskItem', taskId)
 
     const key = {
       userId,
-      todoId
+      taskId
     }
     await this.docClient
       .update({
-        TableName: this.todosTable,
+        TableName: this.tasksTable,
         Key: key,
         UpdateExpression: 'SET #n = :n, dueDate = :dueDate, done = :done',
         ExpressionAttributeValues: {
-          ':n': updatedTodo.name,
-          ':dueDate': updatedTodo.dueDate,
-          ':done': updatedTodo.done
+          ':n': updatedTask.name,
+          ':dueDate': updatedTask.dueDate,
+          ':done': updatedTask.done
         },
         ExpressionAttributeNames: {
           '#n': 'name'
@@ -73,20 +73,20 @@ export class Todo {
       })
       .promise()
 
-    return updatedTodo
+    return updatedTask
   }
 
   async destroy(
-    todoId: string,
+    taskId: string,
     userId: string
   ): Promise<Record<string, boolean>> {
     const key = {
       userId,
-      todoId
+      taskId
     }
     await this.docClient
       .delete({
-        TableName: this.todosTable,
+        TableName: this.tasksTable,
         Key: key
       })
       .promise()

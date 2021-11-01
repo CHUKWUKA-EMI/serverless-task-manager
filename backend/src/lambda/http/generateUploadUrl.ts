@@ -13,23 +13,23 @@ const attachmentUtils = new AttachmentUtils()
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const todoId = event.pathParameters.todoId
+    const taskId = event.pathParameters.taskId
     const userId = getUserId(event)
 
     logger.info('userId', { userId })
-    const isValidTodoId = await attachmentUtils.checkIftodoExists(
-      todoId,
+    const isValidTaskId = await attachmentUtils.checkIftaskExists(
+      taskId,
       userId
     )
 
-    if (!isValidTodoId) {
+    if (!isValidTaskId) {
       return {
         statusCode: 404,
         headers: {
           'Access-Control-Allow-Origin': '*'
         },
         body: JSON.stringify({
-          error: 'Todo does not exist'
+          error: 'Task does not exist'
         })
       }
     }
@@ -38,7 +38,7 @@ export const handler = middy(
     const imageId = uuid.v4()
 
     //create image record in the database
-    await attachmentUtils.createImage(todoId, imageId, event, userId)
+    await attachmentUtils.createImage(taskId, imageId, event, userId)
 
     //generate presigned url for the image
     const url = await attachmentUtils.getUploadUrl(imageId)

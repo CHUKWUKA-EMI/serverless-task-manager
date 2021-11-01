@@ -10,7 +10,7 @@ const logger = createLogger('AttachmentUtils')
 export class AttachmentUtils {
   constructor(
     private readonly docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
-    private readonly todosTable = process.env.TODOS_TABLE,
+    private readonly tasksTable = process.env.TASKS_TABLE,
     private readonly imagesTable = process.env.IMAGES_TABLE,
     private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
     private readonly urlExpiration = process.env.SIGNED_URL_EXPIRATION,
@@ -18,7 +18,7 @@ export class AttachmentUtils {
   ) {}
 
   async createImage(
-    todoId: string,
+    taskId: string,
     imageId: string,
     event: any,
     userId: string
@@ -26,13 +26,13 @@ export class AttachmentUtils {
     const timestamp = new Date().toISOString()
     const newImage = JSON.parse(event.body)
     const imageUrl = `https://${this.bucketName}.s3.amazonaws.com/${imageId}`
-    logger.info('todoItem', { todoId, imageId, userId, event })
+    logger.info('taskItem', { taskId, imageId, userId, event })
     const key = {
       userId,
-      todoId
+      taskId
     }
     const newItem = {
-      todoId,
+      taskId,
       timestamp,
       imageId,
       ...newImage,
@@ -46,8 +46,8 @@ export class AttachmentUtils {
       })
       .promise()
 
-    const updateUrlOnTodo = {
-      TableName: this.todosTable,
+    const updateUrlOnTask = {
+      TableName: this.tasksTable,
       Key: key,
       UpdateExpression: 'set attachmentUrl = :a',
       ExpressionAttributeValues: {
@@ -55,25 +55,25 @@ export class AttachmentUtils {
       },
       ReturnValues: 'UPDATED_NEW'
     }
-    await this.docClient.update(updateUrlOnTodo).promise()
+    await this.docClient.update(updateUrlOnTask).promise()
 
     return newItem
   }
 
-  async checkIftodoExists(todoId: string, userId: string) {
-    logger.info('userId', { userId, todoId })
+  async checkIftaskExists(taskId: string, userId: string) {
+    logger.info('userId', { userId, taskId })
 
     const result = await this.docClient
       .get({
-        TableName: this.todosTable,
+        TableName: this.tasksTable,
         Key: {
-          todoId,
+          taskId,
           userId
         }
       })
       .promise()
 
-    logger.info('Get todo: ', result)
+    logger.info('Get task: ', result)
     return !!result.Item
   }
 

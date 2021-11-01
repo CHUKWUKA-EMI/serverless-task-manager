@@ -1,6 +1,5 @@
-# TODO: Change the name of the org
 org: chukwuka
-service: serverless-todo-app
+service: serverless-task-manager
 
 plugins:
   - serverless-webpack
@@ -20,15 +19,13 @@ provider:
     lambda: true
     apiGateway: true
 
-  # Use these variables in the functions and resouorces section below. For example,
-  # ${self:provider.environment.ATTACHMENT_S3_BUCKET}
   environment:
-    TODOS_TABLE: Todos-${self:provider.stage}
-    TODOS_CREATED_AT_INDEX: CreatedAtIndex
+    TASKS_TABLE: Tasks-${self:provider.stage}
+    TASKS_CREATED_AT_INDEX: CreatedAtIndex
     IMAGES_TABLE: Images-${self:provider.stage}
     IMAGE_ID_INDEX: ImageIdIndex
     USER_ID_INDEX: UserIdIndex
-    ATTACHMENT_S3_BUCKET: chukwukaemi-serverless-todo-images-${self:provider.stage}
+    ATTACHMENT_S3_BUCKET: chukwukaemi-serverless-tasks-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
 
   logs:
@@ -49,114 +46,114 @@ custom:
     api:
       info:
         version: v1.0.0
-        title: Udagram Serverless API
-        description: Serverless application for images sharing
+        title: Serverless Task Manager API
+        description: Serverless application for task management and images sharing
     models:
-      - name: TodoRequest
+      - name: TaskRequest
         contentType: application/json
-        schema: ${file(models/create-todo-model.json)}
+        schema: ${file(models/create-task-model.json)}
       - name: UpdateRequest
         contentType: application/json
-        schema: ${file(models/update-todo-model.json)}
+        schema: ${file(models/update-task-model.json)}
 
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+  GetTasks:
+    handler: src/lambda/http/getTasks.handler
     events:
       - http:
           method: get
-          path: todos
+          path: tasks
           cors: true
           authorizer: Auth
-    iamRoleStatementsName: ${self:service}-get-todos-role-${self:provider.stage}
+    iamRoleStatementsName: ${self:service}-get-tasks-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}/index/${self:provider.environment.TASKS_CREATED_AT_INDEX}
       - Effect: Allow
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.IMAGES_TABLE}/index/${self:provider.environment.IMAGE_ID_INDEX}
 
-  CreateTodo:
-    handler: src/lambda/http/createTodo.handler
+  CreateTask:
+    handler: src/lambda/http/createTask.handler
     events:
       - http:
           method: post
-          path: todos
+          path: tasks
           cors: true
           authorizer: Auth
           request:
             schemas:
               application/json:
-                schema: ${file(models/create-todo-model.json)}
-                name: CreateTodoModel
-                description: 'Validation model for Creating Todos'
-    iamRoleStatementsName: ${self:service}-create-todo-role-${self:provider.stage}
+                schema: ${file(models/create-task-model.json)}
+                name: CreateTaskModel
+                description: 'Validation model for Creating Tasks'
+    iamRoleStatementsName: ${self:service}-create-task-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}
 
-  UpdateTodo:
-    handler: src/lambda/http/updateTodo.handler
+  UpdateTask:
+    handler: src/lambda/http/updateTask.handler
     events:
       - http:
           method: patch
-          path: todos/{todoId}
+          path: tasks/{taskId}
           cors: true
           authorizer: Auth
           request:
             schemas:
               application/json:
-                schema: ${file(models/update-todo-model.json)}
-                name: UpdateTodoModel
-                description: 'Validation model for Updating Todos'
-    iamRoleStatementsName: ${self:service}-update-todo-role-${self:provider.stage}
+                schema: ${file(models/update-task-model.json)}
+                name: UpdateTaskModel
+                description: 'Validation model for Updating Tasks'
+    iamRoleStatementsName: ${self:service}-update-task-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}/index/${self:provider.environment.TASKS_CREATED_AT_INDEX}
 
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  DeleteTask:
+    handler: src/lambda/http/deleteTask.handler
     events:
       - http:
           method: delete
-          path: todos/{todoId}
+          path: tasks/{taskId}
           cors: true
           authorizer: Auth
-    iamRoleStatementsName: ${self:service}-delete-todo-role-${self:provider.stage}
+    iamRoleStatementsName: ${self:service}-delete-task-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:DeleteItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}/index/${self:provider.environment.TASKS_CREATED_AT_INDEX}
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: tasks/{taskId}/attachment
           cors: true
           authorizer: Auth
     iamRoleStatementsName: ${self:service}-generate-upload-url-role-${self:provider.stage}
@@ -170,7 +167,7 @@ functions:
         Action:
           - dynamodb:UpdateItem
           - dynamodb:GetItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:PutItem
@@ -179,7 +176,7 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TASKS_TABLE}/index/${self:provider.environment.TASKS_CREATED_AT_INDEX}
 
 resources:
   Resources:
@@ -194,25 +191,25 @@ resources:
         RestApiId:
           Ref: ApiGatewayRestApi
 
-    TodosTable:
+    TasksTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: todoId
+          - AttributeName: taskId
             AttributeType: S
           - AttributeName: createdAt
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: todoId
+          - AttributeName: taskId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}
+        TableName: ${self:provider.environment.TASKS_TABLE}
         LocalSecondaryIndexes:
-          - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
+          - IndexName: ${self:provider.environment.TASKS_CREATED_AT_INDEX}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
@@ -225,14 +222,14 @@ resources:
       Type: 'AWS::DynamoDB::Table'
       Properties:
         AttributeDefinitions:
-          - AttributeName: todoId
+          - AttributeName: taskId
             AttributeType: S
           - AttributeName: timestamp
             AttributeType: S
           - AttributeName: imageId
             AttributeType: S
         KeySchema:
-          - AttributeName: todoId
+          - AttributeName: taskId
             KeyType: HASH
           - AttributeName: timestamp
             KeyType: RANGE
